@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import puppeteer from "puppeteer";
-import { admin, db } from "./config/firebase.js";
 import { saveArticlesToFirebase } from "./config/saveArticlesToFirebase.js";
-import { saveScrapedArticlesToFile } from "./saveArticlesToFile.js";
 
 // export async function searchBitcoinPrice(query: string): Promise<{ title: string; link: string; content: string, source: string }[]> {
 //   const browser = await puppeteer.launch({
