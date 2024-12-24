@@ -10,9 +10,9 @@ import dotenv from "dotenv";
 const app = express();
 const port = 5000;
 app.use(express.json());
-app.use(bodyParser.json({ limit: "100mb" }));
-app.use(express.json({ limit: "100mb" }));
-app.use(express.urlencoded({ limit: "100mb", extended: true }));
+app.use(bodyParser.json({ limit: "200mb" }));
+app.use(express.json({ limit: "200mb" }));
+app.use(express.urlencoded({ limit: "200mb", extended: true }));
 
 app.use(
   cors({
@@ -21,12 +21,11 @@ app.use(
 );
 
 app.use((req, res, next) => {
-  const payloadSize = JSON.stringify(req.body).length; // Calculate payload size
+  const payloadSize = JSON.stringify(req.body).length;
   console.log(`Payload size: ${payloadSize} bytes`);
 
-  if (payloadSize > 100000000) {
-    // Example: 100 MB limit
-    return res.status(413).json({ error: "Payload too large" });
+  if (payloadSize > 200000000) {
+      return res.status(413).json({ error: "Payload too large. Split data into smaller chunks." });
   }
 
   next();
@@ -80,150 +79,6 @@ const chunkContent = (
   return chunks;
 };
 
-// working for 1 page
-// app.post(
-//   "/api/generate-summary",
-//   async (req: Request, res: Response): Promise<void> => {
-//     try {
-//       const { selectedBatch } = req.body;
-
-//       if (
-//         !selectedBatch ||
-//         !Array.isArray(selectedBatch.articles) ||
-//         selectedBatch.articles.length === 0
-//       ) {
-//         res.status(400).json({ error: "No batch provided or batch is empty" });
-//         return;
-//       }
-
-//       // Step 1: Collect all articles in the selected batch into one string
-//       let allContent = "";
-//       selectedBatch.articles.forEach((article: any) => {
-//         allContent += `Title: ${article.title}\nContent: ${article.content}\n\n`;
-//       });
-
-//       if (!allContent) {
-//         res.status(404).json({ error: "No content to summarize." });
-//         return;
-//       }
-
-//       // Step 2: Chunk the content to fit within the token limit
-//       const contentChunks = chunkContent(
-//         allContent,
-//         MAX_TOKENS - MAX_RESPONSE_TOKENS
-//       );
-
-//       console.log(`Number of chunks created: ${contentChunks.length}`);
-//       const chunkSummaries: any[] = [];
-
-//       // Step 3: Generate a summary for each chunk
-//       for (let i = 0; i < contentChunks.length; i++) {
-//         const chunk = contentChunks[i];
-//         console.log(
-//           `Processing chunk ${i + 1} with token count: ${countTokens(chunk)}`
-//         );
-
-//         const summaryResponse = await openai.chat.completions.create({
-//           model: "gpt-3.5-turbo",
-//           messages: [
-//             {
-//               role: "system",
-//               content: `
-//                 You are a professional summarizer specializing in Bitcoin. Summarize only Bitcoin's latest price trends, market updates, and key developments.
-//                 Generate a structured summary:
-//                 {
-//                   "heading1": "Main Heading",
-//                   "para1": "Paragraph for heading 1",
-//                   "heading2": "Subheading 1",
-//                   "para2": "Paragraph for heading 2",
-//                   "metatitle": "Latest Bitcoin trends & price",
-//                   "metadescription": "Meta Description summarizing the latest Bitcoin information",
-//                   "tags": "Comma-separated tags (e.g., Bitcoin)"
-//                 }
-//                 Focus on Bitcoin's latest price trends, market updates, and key developments. Use clear and concise language.
-//               `,
-//             },
-//             {
-//               role: "user",
-//               content: `Articles to summarize:\n\n${chunk}`,
-//             },
-//           ],
-//           temperature: 0.7,
-//           max_tokens: MAX_RESPONSE_TOKENS,
-//         });
-
-//         const rawOutput = summaryResponse.choices[0]?.message?.content?.trim();
-//         if (!rawOutput) {
-//           console.error(`Chunk ${i + 1}: Empty output from the model.`);
-//           continue;
-//         }
-
-//         try {
-//           // Attempt to parse JSON directly
-//           const parsedSummary = JSON.parse(rawOutput);
-//           chunkSummaries.push(parsedSummary);
-//         } catch (jsonError) {
-//           console.error(
-//             `Chunk ${i + 1}: Failed to parse JSON, attempting fallback.`,
-//             rawOutput
-//           );
-
-//           // Extract JSON-like content using a regex
-//           const jsonMatch = rawOutput.match(/{[\s\S]*}/);
-//           if (jsonMatch) {
-//             try {
-//               const parsedFallback = JSON.parse(jsonMatch[0]);
-//               chunkSummaries.push(parsedFallback);
-//             } catch (fallbackError) {
-//               console.error(
-//                 `Chunk ${i + 1}: Fallback JSON parse failed.`,
-//                 fallbackError
-//               );
-//             }
-//           } else {
-//             console.error(`Chunk ${i + 1}: No JSON-like content found.`);
-//           }
-//         }
-//       }
-
-//       if (chunkSummaries.length === 0) {
-//         res.status(500).json({
-//           error: "No valid summaries were generated.",
-//         });
-//         return;
-//       }
-
-//       // Step 4: Combine chunk summaries into a final structured summary
-//       const finalSummary = {
-//         heading1: chunkSummaries.map((s) => s.heading1 || "").join(",\n"),
-//         para1: chunkSummaries.map((s) => s.para1 || "").join(",\n"),
-//         heading2: chunkSummaries.map((s) => s.heading2 || "").join(",\n"),
-//         para2: chunkSummaries.map((s) => s.para2 || "").join(",\n"),
-//         metatitle: chunkSummaries.map((s) => s.metatitle || "").join(",\n"),
-//         metadescription: chunkSummaries
-//           .map((s) => s.metadescription || "")
-//           .join(",\n"),
-//         tags: "Bitcoin, Cryptocurrency, Price Trends",
-//       };
-
-//       // Send the structured summary as a response
-//       res.json({
-//         success: true,
-//         summary: finalSummary,
-//       });
-//     } catch (error: any) {
-//       console.error(
-//         "Error in generate-summary:",
-//         error.message || error.toString()
-//       );
-//       res.status(500).json({
-//         error: "Error generating summary",
-//         details: error.message || error.toString(),
-//       });
-//     }
-//   }
-// );
-
 app.post(
   "/api/generate-summary",
   async (req: Request, res: Response): Promise<void> => {
@@ -257,11 +112,17 @@ app.post(
       );
 
       console.log(`Number of chunks created: ${contentChunks.length}`);
+      contentChunks.forEach((chunk, index) => {
+        const tokenCount = countTokens(chunk);
+        console.log(`Chunk ${index + 1} token count: ${tokenCount}`);
+      });
+
       const chunkSummaries: any[] = [];
 
       // Step 3: Generate a summary for each chunk
       for (let i = 0; i < contentChunks.length; i++) {
         const chunk = contentChunks[i];
+        console.log(`Processing chunk ${i + 1}`);
         const tokenCount = countTokens(chunk);
         console.log(
           `Processing chunk ${i + 1} with token count: ${tokenCount}`

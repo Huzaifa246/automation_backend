@@ -6,32 +6,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// const app = express();
-// const port = 5000;
-// app.get('/search', async (req: Request, res: Response) => {
-//   try {
-//     // Call the function to search for bitcoin price related articles
-//     const results = await searchBitcoinPrice();
-//     // Save each result to Firestore
-//     for (let result of results) {
-//       const { title, link: url } = result;
-//       // Save the result to Firebase Firestore
-//       await db.collection('articles').add({
-//         title,
-//         url,
-//         createdAt: admin.firestore.FieldValue.serverTimestamp(),
-//       });
-//     }
-//     // Send success response
-//     res.json({ message: 'Articles saved successfully', results });
-//   } catch (error) {
-//     console.error('Error saving articles to Firebase:', error);
-//     res.status(500).json({ error: 'An error occurred while saving articles' });
-//   }
-// });
-// app.listen(port, () => {
-//   console.log(`Server is running on http://localhost:${port}`);
-// });
+
 const express_1 = __importDefault(require("express"));
 const searchBitcoin_1 = require("./searchBitcoin"); // Your search function
 const firebase_1 = require("../config/firebase");
@@ -51,9 +26,9 @@ app.use((req, res, next) => {
     console.log(`Request body size: ${JSON.stringify(req.body).length} bytes`);
     next();
 });
-app.use(body_parser_1.default.raw({ limit: '100mb', type: 'application/json' }));
-app.use(express_1.default.json({ limit: '100mb' }));
-app.use(express_1.default.urlencoded({ limit: '100mb', extended: true }));
+app.use(body_parser_1.default.raw({ limit: '200mb', type: 'application/json' }));
+app.use(express_1.default.json({ limit: '200mb' }));
+app.use(express_1.default.urlencoded({ limit: '200mb', extended: true }));
 const openai = new openai_1.OpenAI({
     apiKey: "",
 });
@@ -147,7 +122,7 @@ app.post('/api/generate-summary', async (req, res) => {
         console.log('Relevant contexts retrieved from Pinecone:', relevantContexts);
         // Use OpenAI to generate the summary with context
         const response = await openai.chat.completions.create({
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-4o',
             messages: [
                 {
                     role: 'system',
