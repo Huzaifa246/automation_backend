@@ -155,12 +155,21 @@ export async function searchBitcoinPrice(
         const links = await page.evaluate((filter) => {
           if (filter === "News") {
             // For Google News results
-            return Array.from(document.querySelectorAll(".SoaBEf")).map(
-              (element) => ({
-                title: element.innerText || "No title", // Adjust selector for title
-                link: element.querySelector(".WlydOe")?.href || "No link", // Adjust selector for link
-              })
-            );
+            // return Array.from(document.querySelectorAll(".SoaBEf")).map(
+            //   (element) => ({
+            //     title: element.innerText || "No title", // Adjust selector for title
+            //     link: element.querySelector(".WlydOe")?.href || "No link", // Adjust selector for link
+            //   })
+            // );
+            return Array.from(document.querySelectorAll(".SoaBEf")).map((element) => {
+              const titleElement = element as HTMLElement;
+              const linkElement = element.querySelector(".WlydOe") as HTMLAnchorElement;
+        
+              return {
+                title: titleElement?.innerText || "No title", // Adjust selector for title
+                link: linkElement?.href || "No link", // Adjust selector for link
+              };
+            });
           } 
           // else if (filter === "Twitter") {
           //   // For Twitter scraping
@@ -180,12 +189,21 @@ export async function searchBitcoinPrice(
           // } 
           else {
             // For All results
-            return Array.from(document.querySelectorAll("h3")).map(
-              (element) => ({
-                title: element.innerText || "No title",
-                link: element.closest("a")?.href || "No link",
-              })
-            );
+            // return Array.from(document.querySelectorAll("h3")).map(
+            //   (element) => ({
+            //     title: element.innerText || "No title",
+            //     link: element.closest("a")?.href || "No link",
+            //   })
+            // );
+            return Array.from(document.querySelectorAll("h3")).map((element) => {
+              const titleElement = element as HTMLElement;
+              const linkElement = element.closest("a") as HTMLAnchorElement;
+        
+              return {
+                title: titleElement?.innerText || "No title",
+                link: linkElement?.href || "No link",
+              };
+            });
           }
         }, search.filter);
 

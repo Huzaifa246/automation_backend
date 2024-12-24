@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import { searchBitcoinPrice } from "./searchBitcoinPrice.js";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -20,16 +20,18 @@ app.use(
   })
 );
 
-app.use((req, res, next) => {
+app.use(((req: Request, res: Response, next: NextFunction) => {
   const payloadSize = JSON.stringify(req.body).length;
   console.log(`Payload size: ${payloadSize} bytes`);
 
   if (payloadSize > 200000000) {
-      return res.status(413).json({ error: "Payload too large. Split data into smaller chunks." });
+    return res
+      .status(413)
+      .json({ error: "Payload too large. Split data into smaller chunks." });
   }
 
   next();
-});
+}) as express.RequestHandler);
 
 dotenv.config();
 const openai = new OpenAI({
@@ -204,8 +206,10 @@ app.post(
         return;
       }
 
-      const unique = (arr) =>
-        Array.from(new Set(arr.filter((item) => item.trim() !== "")));
+      // const unique = (arr) =>
+      //   Array.from(new Set(arr.filter((item) => item.trim() !== "")));
+      const unique = (arr: string[]) =>
+        Array.from(new Set(arr.filter((item) => item.trim() !== "")));      
 
       // Step 4: Combine chunk summaries into a final structured summary
       const finalSummary = {
